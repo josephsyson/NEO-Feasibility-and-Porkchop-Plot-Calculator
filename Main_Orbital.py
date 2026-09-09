@@ -425,7 +425,7 @@ def U_R(
     return U_R_value
 
 
-def Hohmann_Transfer(NEO_Data):
+def Hohmann_Transfer(NEO_Data): # This function calculates a simplified two body transfer using the Hohmann Transfer equation. The equations are cited from Section 6.3 of https://www.hlevkin.com/hlevkin/90MathPhysBioBooks/Mechanics/Curtis_OrbitamMechForEngineeringStudents.pdf.
     r_1 = 149597870.7  # km, this is the average distance from the Earth to the Sun, which is used as the radius of Earth's orbit in the Hohmann transfer calculations.
     µ = 1.32712440018e11  # km^3/s^2, this is the standard gravitational parameter of the Sun, which is used in the Hohmann transfer calculations to determine the velocities of the spacecraft at different points in the transfer orbit.
 
@@ -441,32 +441,32 @@ def Hohmann_Transfer(NEO_Data):
 
         v_1 = math.sqrt(
             µ / r_1
-        )  # km/s, this is the velocity of the spacecraft in Earth's orbit before the transfer burn, calculated using the vis-viva equation.
+        )  # km/s, this is the circular velocity of the spacecraft in Earth's orbit before the transfer burn, equation 2.53 in the Curtis textbook
         v_2 = math.sqrt(
             µ / r_2
-        )  # km/s, this is the velocity of the spacecraft in the NEO's orbit after the transfer burn, calculated using the vis-viva equation.
+        )  # km/s, this is the circular velocity of the spacecraft in the NEO's orbit after the transfer burn, equation 2.53 in the Curtis textbook
 
         v_transfer_1 = math.sqrt(
             (2 * µ) * ((1 / r_1) - (1 / (r_1 + r_2)))
-        )  # The velocity of the circular transfer orbit as it leaves the initial orbit, calculated using the vis-viva equation.
+        )  # The velocity of the circular transfer orbit as it leaves the initial orbit, calculated using the vis-viva equation. Rearranged Equation 2.71 from the Curtis textbook.
         v_transfer_2 = math.sqrt(
             (2 * µ) * ((1 / r_2) - (1 / (r_1 + r_2)))
-        )  # The velocity of the circular transfer orbit as it enters the final orbit, calculated using the vis-viva equation.
+        )  # The velocity of the circular transfer orbit as it enters the final orbit, calculated using the vis-viva equation. Also cited as equation 2.71 from the Curtis textbook.
 
         Δv_1 = math.fabs(
             v_transfer_1 - v_1
-        )  # km/s, this is the delta V required for the first burn to leave Earth's orbit and enter the transfer orbit, calculated as the difference between the transfer orbit velocity and the initial orbit velocity.
+        )  # km/s, this is the delta V required for the first burn to leave Earth's orbit and enter the transfer orbit, calculated as the difference between the transfer orbit velocity and the initial orbit velocity. This is shown in example 6.1 in the Curtis textbook.
         Δv_2 = math.fabs(
             v_2 - v_transfer_2
-        )  # km/s, this is the delta V required for the second burn to leave the transfer orbit and enter the NEO's orbit, calculated as the difference between the final orbit velocity and the transfer orbit velocity
+        )  # km/s, this is the delta V required for the second burn to leave the transfer orbit and enter the NEO's orbit, calculated as the difference between the final orbit velocity and the transfer orbit velocity. This is shown in example 6.1 in the Curtis textbook.
 
         Total_Δv = (
             Δv_1 + Δv_2
-        )  # km/s, this is the total delta V required for the Hohmann transfer mission, calculated as the sum of the delta V for the first and second burns.
+        )  # km/s, this is the total delta V required for the Hohmann transfer mission, calculated as the sum of the delta V for the first and second burns. This is shown in example 6.1 in the Curtis textbook.
 
         t = math.pi * math.sqrt(
             ((r_1 + r_2) ** 3) / (8 * µ)
-        )  # seconds, this is the time of flight for the Hohmann transfer, calculated using Kepler's third law.
+        )  # seconds, this is the time of flight for the Hohmann transfer, calculated using Kepler's third law. Equation 2.73 from the Curits Textbook with the equation for semi major axis of the transfer orbit substituted in. 
         t_days = t / (
             60 * 60 * 24
         )  # days, this is the time of flight for the Hohmann transfer converted from seconds to days.
