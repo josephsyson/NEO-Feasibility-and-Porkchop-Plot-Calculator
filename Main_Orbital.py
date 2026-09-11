@@ -466,7 +466,7 @@ def Hohmann_Transfer(NEO_Data): # This function calculates a simplified two body
 
         t = math.pi * math.sqrt(
             ((r_1 + r_2) ** 3) / (8 * µ)
-        )  # seconds, this is the time of flight for the Hohmann transfer, calculated using Kepler's third law. Equation 2.73 from the Curits Textbook with the equation for semi major axis of the transfer orbit substituted in. 
+        )  # seconds, this is the time of flight for the Hohmann transfer, calculated using Kepler's third law. Equation 2.73 from the Curtis Textbook with the equation for semi major axis of the transfer orbit substituted in. 
         t_days = t / (
             60 * 60 * 24
         )  # days, this is the time of flight for the Hohmann transfer converted from seconds to days.
@@ -573,7 +573,7 @@ def Lambert_Problem_Preparation(
 
         r_NEO_km = (
             r_inertial_NEO * AU_to_Km
-        )  # The NEO's position vector in the inertial reference frame in km.
+        )  # The NEO's position vector in the inertial reference frame in km
         v_NEO_km = (
             v_intertial_NEO * AU_to_Km
         )  # The NEO's velocity vector in the inertial reference frame in km/s.
@@ -863,7 +863,7 @@ def z_Solver_Prograde(
                 ((Y / C) ** 1.5)
                 * (((1 / (2 * z)) * (C - (3 * S / (2 * C)))) + (3 * S**2) / (4 * C))
             ) + (A_Prograde / 8) * (
-                (3 * S / C) * math.sqrt(Y) + (A_Prograde / math.sqrt(Y))
+                (3 * S / C) * math.sqrt(Y) + (A_Prograde * math.sqrt(C / Y))
             )  # The derivative of F with respect to z (dFdz) is calculated using the chain rule and the derivatives of the Stumpff functions C(z) and S(z). This is a standard approach in numerical methods for solving equations involving special functions. This is cited in equation 5.43 from Curtis, H. D. (2014). Orbital Mechanics for Engineering Students (3rd ed.). Butterworth-Heinemann.
 
         z_next = z - (
@@ -962,7 +962,7 @@ def z_Solver_Retrograde(
                 ((Y / C) ** 1.5)
                 * (((1 / (2 * z)) * (C - (3 * S / (2 * C)))) + (3 * S**2) / (4 * C))
             ) + (A_Retrograde / 8) * (
-                (3 * S / C) * math.sqrt(Y) + (A_Retrograde / math.sqrt(Y))
+                (3 * S / C) * math.sqrt(Y) + (A_Retrograde * math.sqrt(C / Y))
             )  # The derivative of F with respect to z (dFdz) is calculated using the chain rule and the derivatives of the Stumpff functions C(z) and S(z). This is a standard approach in numerical methods for solving equations involving special functions. This is cited in equation 5.43 from Curtis, H. D. (2014). Orbital Mechanics for Engineering Students (3rd ed.). Butterworth-Heinemann.
 
         z_next = z - (
