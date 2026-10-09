@@ -70,11 +70,11 @@ def test_round_trip_earth():  # Using Earth as the central body,calculates the i
 def test_round_trip_heliocentric():  # Using the Sun as the central body, calculates the initial velocity vector v1 using my coded Lambert solver. Propagates the initial position and velocity vectors using the two-body problem to get the final position vector r2_prop after 200 days. Calculates the error between the propagated final position vector and the target final position vector.
     mu_sun = 1.32712440018e11  # km^3/s^2
     AU = 149597870.7
-    r1 = np.array([AU, 0.0, 0.0])
+    r1 = np.array([AU, 0.0, 0.0]) # Made-up starting position 1 AU from the Sun, along the x-axis. Not real ephimeris data.
     ang = math.radians(100.0)
     r2 = (
         1.52 * AU * np.array([math.cos(ang), math.sin(ang), 0.0])
-    )  # Uses made up positions from the Sun to Mars for a heliocentric round trip test.
+    )  # Made-up target position 1.52 AU from the Sun (roughly Mars's distance), 100 degrees from the starting posiition for a heliocentric round trip test. Not real ephimeris data.
     tof_days = 200.0
 
     v1, _ = solve_lambert_prograde(r1, r2, tof_days, mu_sun)

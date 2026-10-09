@@ -1298,6 +1298,9 @@ def NEO_Feasibility_Analysis_Plot(
 
     @my_cursor.connect("add")
     def on_add(sel):
+        if sel.annotation.arrow_patch is not None:
+            sel.annotation.arrow_patch.set_visible(False)
+        hover_x, hover_y = sel.target
 
         hover_x, hover_y = sel.target
         name = None
@@ -1317,6 +1320,8 @@ def NEO_Feasibility_Analysis_Plot(
 
     @click_cursor.connect("add")
     def on_click(sel):
+        if sel.annotation.arrow_patch is not None:
+            sel.annotation.arrow_patch.set_visible(False)
         click_x, click_y = sel.target
         name = None
 
@@ -1730,8 +1735,8 @@ def Porkchop_Plot(
     table.scale(1, 1.5)
 
     plt.tight_layout()
+    plt.savefig("neo_porkchop_plot", dpi=300)
     plt.show()  # Displays the porkchop plot.
 
-    
 if __name__ == "__main__":
     asyncio.run(main())
