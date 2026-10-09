@@ -16,7 +16,7 @@ def NEO_Horizons_Vectors(
 
     try:
         obj = Horizons(
-            id=str(designation) , id_type="designation", location="500@10", epochs=epochs
+            id='DES=' + str(designation) + ';', id_type="smallbody", location="500@10", epochs=epochs
         )
         vectors = obj.vectors()
     except Exception as error:

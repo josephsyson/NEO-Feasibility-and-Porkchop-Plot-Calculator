@@ -255,7 +255,7 @@ async def find_neo(Check_Input_Data):
         Argument_of_Perihelion_List.append(
             NEO_Data["orbital_data"]["perihelion_argument"]
         )
-        Designation_List.append(NEO_Data.get("designation", NEO_Data["id"]))
+        Designation_List.append(NEO_Data.get("Designation", NEO_Data["id"]))
 
     NEO_Data = {
         "Date:": Date_List,
