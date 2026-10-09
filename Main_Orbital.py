@@ -11,6 +11,8 @@ from astroquery.jplhorizons import Horizons
 from matplotlib import pyplot as plt
 import mplcursors
 import matplotlib.dates as mdates
+from Horizons_NEO import NEO_Horizons_Vectors
+import sys
 
 
 async def main():
@@ -26,7 +28,9 @@ async def main():
         Lambert_TOF_Sweep_Preparation_Variables
     )
 
-    NEO_Feasibility_Analysis_Plot(NEO_Data, Optimized_Delta_v, Shoemaker_Helin_result, Hohmann_Transfer_result)
+    NEO_Feasibility_Analysis_Plot(
+        NEO_Data, Optimized_Delta_v, Shoemaker_Helin_result, Hohmann_Transfer_result
+    )
 
 
 def check_input():  # receives the user input and checks that it is valid as well as accepted by the API
@@ -172,7 +176,7 @@ async def find_neo(Check_Input_Data):
     NEO_Web_Link = Check_Input_Data[0]
     NEO_json = requests.get(
         NEO_Web_Link
-    ).json()  # Retrieves the data from the API link and stores it as a JSON object for use in the rest of the program. The JSON object contains data about the near earth objects that were observed during the specified date range, including their size, distance from Earth, and potential impact risk. The JSON object can be used to extract specific data about the near earth objects and analyze it to determine their potential impact risk and other characteTime_of_Flight_days =ristics.
+    ).json()  # Retrieves the data from the API link and stores it as a JSON object for use in the rest of the program. The JSON object contains data about the near earth objects that were observed during the specified date range, including their size, distance from Earth, and potential impact risk. The JSON object can be used to extract specific data about the near earth objects and analyze it to determine their potential impact risk and other characteristics.
     # These are the lists which will store the data about the NEOs, the same positional argument in each list will correspond to the same NEO, for example, the NEO with ID_List[0] will have a diameter of Diameter_List[0], a relative velocity of Relative_Velocity_List[0], and a miss distance of Miss_Distance_List[0]:
     Date_List = []  # Date of each NEO's closest approach to Earth
     ID_List = []  # ID of each NEO
@@ -200,6 +204,9 @@ async def find_neo(Check_Input_Data):
         []
     )  # Longitude of the ascending node of each NEO (the angle between the reference direction and the ascending node of the NEO's orbit, usually measured in degrees)
     Argument_of_Perihelion_List = []
+    Designation_List = (
+        []
+    )  # Designator of each NEO (the unique identifier assigned to the NEO by the Minor Planet Center, usually a combination of letters and numbers)
 
     temp_start = Start_Date  # This loops through each day in the specified date range and retrieves the name and ID of each NEO observed on that day, storing them in their respective lists.
     while temp_start <= End_Date:
@@ -248,6 +255,7 @@ async def find_neo(Check_Input_Data):
         Argument_of_Perihelion_List.append(
             NEO_Data["orbital_data"]["perihelion_argument"]
         )
+        Designation_List.append(NEO_Data.get("designation", NEO_Data["id"]))
 
     NEO_Data = {
         "Date:": Date_List,
@@ -268,6 +276,7 @@ async def find_neo(Check_Input_Data):
         "Mean_Anomaly_list": Mean_Anomaly_List,
         "ascending_node_longitude_list": ascending_node_longitude_list,
         "Argument_of_Perihelion_List": Argument_of_Perihelion_List,
+        "Designation_List": Designation_List,
     }
     return NEO_Data
 
@@ -425,7 +434,9 @@ def U_R(
     return U_R_value
 
 
-def Hohmann_Transfer(NEO_Data): # This function calculates a simplified two body transfer using the Hohmann Transfer equation. The equations are cited from Section 6.3 of https://www.hlevkin.com/hlevkin/90MathPhysBioBooks/Mechanics/Curtis_OrbitamMechForEngineeringStudents.pdf.
+def Hohmann_Transfer(
+    NEO_Data,
+):  # This function calculates a simplified two body transfer using the Hohmann Transfer equation. The equations are cited from Section 6.3 of https://www.hlevkin.com/hlevkin/90MathPhysBioBooks/Mechanics/Curtis_OrbitamMechForEngineeringStudents.pdf.
     r_1 = 149597870.7  # km, this is the average distance from the Earth to the Sun, which is used as the radius of Earth's orbit in the Hohmann transfer calculations.
     µ = 1.32712440018e11  # km^3/s^2, this is the standard gravitational parameter of the Sun, which is used in the Hohmann transfer calculations to determine the velocities of the spacecraft at different points in the transfer orbit.
 
@@ -466,7 +477,7 @@ def Hohmann_Transfer(NEO_Data): # This function calculates a simplified two body
 
         t = math.pi * math.sqrt(
             ((r_1 + r_2) ** 3) / (8 * µ)
-        )  # seconds, this is the time of flight for the Hohmann transfer, calculated using Kepler's third law. Equation 2.73 from the Curtis Textbook with the equation for semi major axis of the transfer orbit substituted in. 
+        )  # seconds, this is the time of flight for the Hohmann transfer, calculated using Kepler's third law. Equation 2.73 from the Curtis Textbook with the equation for semi major axis of the transfer orbit substituted in.
         t_days = t / (
             60 * 60 * 24
         )  # days, this is the time of flight for the Hohmann transfer converted from seconds to days.
@@ -474,125 +485,9 @@ def Hohmann_Transfer(NEO_Data): # This function calculates a simplified two body
         results[Name] = {
             "Date: ": date,
             "Total Δv (km/s)": Total_Δv,
-            "Time of Flight (days)": t_days
+            "Time of Flight (days)": t_days,
         }
     return results
-
-
-def Lambert_Problem_Preparation(
-    NEO_Data,
-):  # Gathers the necessary data for solving the Lambert problem including solving for the postions and velocities of each NEO as well as the Earth for that specific date. The corresponding functions used to convert the API data from the 6 orbital elements to position and velocity vectors use the equations explained in: https://www.youtube.com/watch?v=zi0FGTGnbB4&t=3290s.
-    Lambert_Variables = {}
-    for n in range(len(NEO_Data["ID:"])):
-        name = NEO_Data["Name:"][n]
-        date = NEO_Data["Date:"][n]
-        epoch_osculation = NEO_Data["Epoch_Osculation_List"][n]
-        mean_motion = NEO_Data["Mean_Motion_List"][n]
-        initial_mean_anomaly = NEO_Data["Mean_Anomaly_list"][n]
-        e = float(NEO_Data["Eccentricity (e):"][n])
-        a = float(NEO_Data["Semi Major Axis (a):"][n])
-        Raan = math.radians(float(NEO_Data["ascending_node_longitude_list"][n]))
-        Argument_of_Perihelion = math.radians(
-            float(NEO_Data["Argument_of_Perihelion_List"][n])
-        )
-        inclination = math.radians(float(NEO_Data["Inclination (i):"][n]))
-
-        Time_of_Flight_days = float(NEO_Data["Time_of_Flight_days"])
-        Departure_JD = julian.to_jd(datetime.strptime(date, "%Y-%m-%d"), fmt="jd")
-        Arrival_Date_String = Departure_JD + Time_of_Flight_days
-
-        Mean_Anomaly = Mean_Anomaly_of_Inputted_Date(
-            epoch_osculation, Arrival_Date_String, mean_motion, initial_mean_anomaly
-        )
-        Eccentric_Anomaly = Eccentric_Anomaly_Calculation(Mean_Anomaly, e)
-        True_Anomaly = True_Anomaly_Calculation(Eccentric_Anomaly, e)
-
-        r_NEO = (a * (1 - e**2)) / (
-            1 + (e * math.cos(True_Anomaly))
-        )  # This is the equation to calculate the distance from the sun to the NEO at the inputted date, which is needed to calculate the position and velocity vectors for the Lambert problem solution.
-
-        True_Anomaly_dot = True_Anomaly_Dot_Calculation(a, e, r_NEO)
-
-        r_dot_NEO = (
-            ((a * (1 - e**2)) * (e * math.sin(True_Anomaly)))
-            / (1 + (e * math.cos(True_Anomaly))) ** 2
-        ) * (
-            True_Anomaly_dot
-        )  # This is the equation to calculate the rate of change of the distance from the sun to the NEO.
-
-        x_perifocal_NEO = r_NEO * math.cos(
-            True_Anomaly
-        )  # The x component of the NEO's position vector in the perifocal reference frame.
-        y_perifocal_NEO = r_NEO * math.sin(
-            True_Anomaly
-        )  # The y component of the NEO's position vector in the perifocal reference frame.
-        z_perifocal_NEO = 0  # The z component of the NEO's position vector in the perifocal reference frame, which is 0 because the NEO's orbit is assumed to be in the plane of the ecliptic.
-
-        x_dot_periofocal_NEO = (r_dot_NEO * math.cos(True_Anomaly)) - (
-            r_NEO * math.sin(True_Anomaly) * True_Anomaly_dot
-        )  # The x component of the NEO's velocity vector in the perifocal reference frame.
-
-        y_dot_periofocal_NEO = (r_dot_NEO * math.sin(True_Anomaly)) + (
-            r_NEO * math.cos(True_Anomaly) * True_Anomaly_dot
-        )  # The y component of the NEO's velocity vector in the perifocal reference frame.
-
-        z_dot_periofocal_NEO = 0  # The z component of the NEO's velocity vector in the perifocal reference frame, which is 0 because the NEO's orbit is assumed to be in the plane of the ecliptic.
-
-        r_perifocal_NEO = np.array(
-            [x_perifocal_NEO, y_perifocal_NEO, z_perifocal_NEO]
-        )  # The NEO's position vector in the perifocal reference frame.
-
-        v_perifocal_NEO = np.array(
-            [x_dot_periofocal_NEO, y_dot_periofocal_NEO, z_dot_periofocal_NEO]
-        )  # The NEO's velocity vector in the perifocal reference frame.
-
-        # The following functions are the rotation matrices to convert the NEO's position vector from the perifocal reference frame to the geocentric equatorial reference frame, which is needed for the Lambert problem solution. The rotation is done in the order of Raan, Inclination, and Argument of Perihelion and the matrices are in the order of 3-1-3, which is the standard order for orbital mechanics calculations.
-        C_3_Raan = C_3(Raan)
-        C_1_Inclination = C_1(inclination)
-        C_3_Argument_of_Perihelion = C_3(Argument_of_Perihelion)
-
-        C_pi = (
-            C_3_Argument_of_Perihelion @ C_1_Inclination @ C_3_Raan
-        )  # The combined rotation matrix to convert from the perifocal reference frame to the inertial reference frame.
-
-        C_ip = C_pi.T
-
-        r_inertial_NEO = (
-            C_ip @ r_perifocal_NEO
-        )  # The NEO's position vector in the inertial reference frame, which is needed for the Lambert problem solution in AU
-
-        v_intertial_NEO = (
-            C_ip @ v_perifocal_NEO
-        )  # The NEO's velocity vector in the inertial reference frame, which is needed for the Lambert problem solution in AU/s
-
-        r_Earth, v_Earth = Earth_Data(
-            date
-        )  # The position and velocity vectors of the Earth in the inertial reference frame at the inputted date, which is needed for the Lambert problem solution. The poistion is in AU and the velocity is in AU/day.
-
-        AU_to_Km = 149597870.7  # This is the conversion factor from astronomical units (AU) to kilometers (km), which is used to convert the position vectors from AU to km for the Lambert problem solution.
-
-        r_NEO_km = (
-            r_inertial_NEO * AU_to_Km
-        )  # The NEO's position vector in the inertial reference frame in km
-        v_NEO_km = (
-            v_intertial_NEO * AU_to_Km
-        )  # The NEO's velocity vector in the inertial reference frame in km/s.
-        r_Earth_km = (
-            r_Earth * AU_to_Km
-        )  # The Earth's position vector in the inertial reference frame in km.
-        v_Earth_km = (
-            v_Earth * AU_to_Km / 86400
-        )  # The Earth's velocity vector in the inertial reference frame in km/s.
-
-        Lambert_Variables[name] = {
-            "r_Earth": r_Earth_km,
-            "v_Earth": v_Earth_km,
-            "r_NEO": r_NEO_km,
-            "v_NEO": v_NEO_km,
-            "Time_of_Flight_days": Time_of_Flight_days,
-        }
-
-    return Lambert_Variables
 
 
 def Mean_Anomaly_of_Inputted_Date(
@@ -736,7 +631,7 @@ def retrograde(
 
 def Stumpff_C(
     z,
-):  # The Stumpff function for C(Z) is a mathematical function which relates to hyperbolic and elliptical orbits in orbital mechanics. C(Z) specifically relates cosine to such orbits. Equation 3.50 in Curtis, H. D. (2014). Orbital Mechanics for Engineering Students (3rd ed.). Butterworth-Heinemann.
+):  # The Stumpff function for C(Z) is a mathematical function which relates to hyperbolic and elliptical orbits in orbital mechanics. C(Z) specifically relates cosine to such orbits. Equation 3.50 in Curtis, H. D. (2014). Orbital Mechanics for Engineering Students (1st ed.). Butterworth-Heinemann.
     if z > 0:
         C = (
             1 - math.cos(math.sqrt(z))
@@ -754,7 +649,7 @@ def Stumpff_C(
 
 def Stumpff_S(
     z,
-):  # The Stumpff function for S(Z) is a mathematical function which relates to hyperbolic and elliptical orbits in orbital mechanics. S(Z) specifically relates sine to such orbits. Equation 3.49 in Curtis, H. D. (2014). Orbital Mechanics for Engineering Students (3rd ed.). Butterworth-Heinemann.
+):  # The Stumpff function for S(Z) is a mathematical function which relates to hyperbolic and elliptical orbits in orbital mechanics. S(Z) specifically relates sine to such orbits. Equation 3.49 in Curtis, H. D. (2014). Orbital Mechanics for Engineering Students (1st ed.). Butterworth-Heinemann.
     if z > 0:
         S = (math.sqrt(z) - math.sin(math.sqrt(z))) / (
             z ** (3 / 2)
@@ -799,7 +694,7 @@ def z_Solver_Prograde(
 
     def F_of_z(
         z_val,
-    ):  # This function calculates F(z) for a given z value, which is used in the Newton-Raphson method to iteratively solve for the z value that satisfies the time of flight equation. The function uses the y(z) value calculated from the y_of_z function, as well as the Stumpff functions C(z) and S(z), to calculate F(z). The goal is to find the root of F(z) = 0, which corresponds to the correct z value for the transfer orbit. This equation is cited in equation 5.40 from Curtis, H. D. (2014). Orbital Mechanics for Engineering Students (3rd ed.). Butterworth-Heinemann.
+    ):  # This function calculates F(z) for a given z value, which is used in the Newton-Raphson method to iteratively solve for the z value that satisfies the time of flight equation. The function uses the y(z) value calculated from the y_of_z function, as well as the Stumpff functions C(z) and S(z), to calculate F(z). The goal is to find the root of F(z) = 0, which corresponds to the correct z value for the transfer orbit. This equation is cited in equation 5.40 from Curtis, H. D. (2014). Orbital Mechanics for Engineering Students (1st) ed.). Butterworth-Heinemann.
         z_val, Y_val = y_of_z(z_val, r_Earth_norm, r_NEO_norm, A_Prograde)
         C_val = Stumpff_C(z_val)
         S_val = Stumpff_S(z_val)
@@ -841,7 +736,7 @@ def z_Solver_Prograde(
             (((Y / C) ** 1.5) * S)
             + (A_Prograde * math.sqrt(Y))
             - (math.sqrt(mu) * Time_of_Flight_days * 86400)
-        )  # The function F(z) is derived from the time of flight equation for the transfer orbit and is used to determine if the current estimate of z satisfies the time of flight requirement. The goal is to find the root of F(z) = 0, which corresponds to the correct z value for the transfer orbit. This equation is cited in equation 5.40 from Curtis, H. D. (2014). Orbital Mechanics for Engineering Students (3rd ed.). Butterworth-Heinemann.
+        )  # The function F(z) is derived from the time of flight equation for the transfer orbit and is used to determine if the current estimate of z satisfies the time of flight requirement. The goal is to find the root of F(z) = 0, which corresponds to the correct z value for the transfer orbit. This equation is cited in equation 5.40 from Curtis, H. D. (2014). Orbital Mechanics for Engineering Students (1st ed.). Butterworth-Heinemann.
 
         if (
             F * F_lo > 0
@@ -857,14 +752,14 @@ def z_Solver_Prograde(
             dFdz = ((math.sqrt(2) / 40) * (Y**1.5)) + (
                 (A_Prograde / 8)
                 * ((math.sqrt(Y) + A_Prograde * math.sqrt(1 / (2 * Y))))
-            )  # In special cases where z = 0, the derivative of F with respect to z (dFdz) is calculated using a different formula to avoid division by zero errors. This is a common practice in numerical methods when dealing with special cases or singularities in the equations. This method used a series expansion to approximate the value. Cited in D. 11 the solution to the Lambert problem with Equation 5.43in Curtis, H. D. (2014). Orbital Mechanics for Engineering Students (3rd ed.). Butterworth-Heinemann.
+            )  # In special cases where z = 0, the derivative of F with respect to z (dFdz) is calculated using a different formula to avoid division by zero errors. This is a common practice in numerical methods when dealing with special cases or singularities in the equations. This method used a series expansion to approximate the value. Cited in D. 11 the solution to the Lambert problem with Equation 5.43in Curtis, H. D. (2014). Orbital Mechanics for Engineering Students (1st ed.). Butterworth-Heinemann.
         else:
             dFdz = (
                 ((Y / C) ** 1.5)
                 * (((1 / (2 * z)) * (C - (3 * S / (2 * C)))) + (3 * S**2) / (4 * C))
             ) + (A_Prograde / 8) * (
                 (3 * S / C) * math.sqrt(Y) + (A_Prograde * math.sqrt(C / Y))
-            )  # The derivative of F with respect to z (dFdz) is calculated using the chain rule and the derivatives of the Stumpff functions C(z) and S(z). This is a standard approach in numerical methods for solving equations involving special functions. This is cited in equation 5.43 from Curtis, H. D. (2014). Orbital Mechanics for Engineering Students (3rd ed.). Butterworth-Heinemann.
+            )  # The derivative of F with respect to z (dFdz) is calculated using the chain rule and the derivatives of the Stumpff functions C(z) and S(z). This is a standard approach in numerical methods for solving equations involving special functions. This is cited in equation 5.43 from Curtis, H. D. (2014). Orbital Mechanics for Engineering Students (1st ed.). Butterworth-Heinemann.
 
         z_next = z - (
             F / dFdz
@@ -898,7 +793,7 @@ def z_Solver_Retrograde(
 
     def F_of_z(
         z_val,
-    ):  # This function calculates F(z) for a given z value, which is used in the Newton-Raphson method to iteratively solve for the z value that satisfies the time of flight equation. The function uses the y(z) value calculated from the y_of_z function, as well as the Stumpff functions C(z) and S(z), to calculate F(z). The goal is to find the root of F(z) = 0, which corresponds to the correct z value for the transfer orbit. This equation is cited in equation 5.40 from Curtis, H. D. (2014). Orbital Mechanics for Engineering Students (3rd ed.). Butterworth-Heinemann.
+    ):  # This function calculates F(z) for a given z value, which is used in the Newton-Raphson method to iteratively solve for the z value that satisfies the time of flight equation. The function uses the y(z) value calculated from the y_of_z function, as well as the Stumpff functions C(z) and S(z), to calculate F(z). The goal is to find the root of F(z) = 0, which corresponds to the correct z value for the transfer orbit. This equation is cited in equation 5.40 from Curtis, H. D. (2014). Orbital Mechanics for Engineering Students (1st ed.). Butterworth-Heinemann.
         z_val, Y_val = y_of_z(z_val, r_Earth_norm, r_NEO_norm, A_Retrograde)
         C_val = Stumpff_C(z_val)
         S_val = Stumpff_S(z_val)
@@ -940,7 +835,7 @@ def z_Solver_Retrograde(
             (((Y / C) ** 1.5) * S)
             + (A_Retrograde * math.sqrt(Y))
             - (math.sqrt(mu) * Time_of_Flight_days * 86400)
-        )  # The function F(z) is derived from the time of flight equation for the transfer orbit and is used to determine if the current estimate of z satisfies the time of flight requirement. The goal is to find the root of F(z) = 0, which corresponds to the correct z value for the transfer orbit. This equation is cited in equation 5.40 from Curtis, H. D. (2014). Orbital Mechanics for Engineering Students (3rd ed.). Butterworth-Heinemann.
+        )  # The function F(z) is derived from the time of flight equation for the transfer orbit and is used to determine if the current estimate of z satisfies the time of flight requirement. The goal is to find the root of F(z) = 0, which corresponds to the correct z value for the transfer orbit. This equation is cited in equation 5.40 from Curtis, H. D. (2014). Orbital Mechanics for Engineering Students (1st ed.). Butterworth-Heinemann.
 
         if (
             F * F_lo > 0
@@ -956,14 +851,14 @@ def z_Solver_Retrograde(
             dFdz = ((math.sqrt(2) / 40) * (Y**1.5)) + (
                 (A_Retrograde / 8)
                 * ((math.sqrt(Y) + A_Retrograde * math.sqrt(1 / (2 * Y))))
-            )  # In special cases where z = 0, the derivative of F with respect to z (dFdz) is calculated using a different formula to avoid division by zero errors. This is a common practice in numerical methods when dealing with special cases or singularities in the equations. This method used a series expansion to approximate the value. Cited in the solution to the Lambert problem in Curtis, H. D. (2014). Orbital Mechanics for Engineering Students (3rd ed.). Butterworth-Heinemann.
+            )  # In special cases where z = 0, the derivative of F with respect to z (dFdz) is calculated using a different formula to avoid division by zero errors. This is a common practice in numerical methods when dealing with special cases or singularities in the equations. This method used a series expansion to approximate the value. Cited in the solution to the Lambert problem in Curtis, H. D. (2014). Orbital Mechanics for Engineering Students (1st ed.). Butterworth-Heinemann.
         else:
             dFdz = (
                 ((Y / C) ** 1.5)
                 * (((1 / (2 * z)) * (C - (3 * S / (2 * C)))) + (3 * S**2) / (4 * C))
             ) + (A_Retrograde / 8) * (
                 (3 * S / C) * math.sqrt(Y) + (A_Retrograde * math.sqrt(C / Y))
-            )  # The derivative of F with respect to z (dFdz) is calculated using the chain rule and the derivatives of the Stumpff functions C(z) and S(z). This is a standard approach in numerical methods for solving equations involving special functions. This is cited in equation 5.43 from Curtis, H. D. (2014). Orbital Mechanics for Engineering Students (3rd ed.). Butterworth-Heinemann.
+            )  # The derivative of F with respect to z (dFdz) is calculated using the chain rule and the derivatives of the Stumpff functions C(z) and S(z). This is a standard approach in numerical methods for solving equations involving special functions. This is cited in equation 5.43 from Curtis, H. D. (2014). Orbital Mechanics for Engineering Students (1st ed.). Butterworth-Heinemann.
 
         z_next = z - (
             F / dFdz
@@ -1002,7 +897,7 @@ def Lambert_Langrange_Solver(
 
     v1 = (1 / g) * (
         r_NEO_Vec - (f * r_Earth_Vec)
-    )  # The initial velocity vector required for the transfer orbit, calculated using the Lagrange coefficients and the position vectors of Earth and the NEO. Cited in equation 5.28 from Curtis, H. D. (2014). Orbital Mechanics for Engineering Students (3rd ed.). Butterworth-Heinemann.
+    )  # The initial velocity vector required for the transfer orbit, calculated using the Lagrange coefficients and the position vectors of Earth and the NEO. Cited in equation 5.28 from Curtis, H. D. (2014). Orbital Mechanics for Engineering Students (1st ed.). Butterworth-Heinemann.
     v2 = (1 / g) * ((g_dot * r_NEO_Vec) - r_Earth_Vec)
 
     return v1, v2
@@ -1035,7 +930,11 @@ def Earth_Data_Range(dates):
     start_string = dates[0].strftime("%Y-%m-%d")
     end_string = dates[-1].strftime("%Y-%m-%d")
 
-    epochs = {"start": start_string, "stop": end_string, "step": '5d'}  # This creates a dictionary that specifies the start and stop dates for the range of dates for which we want to pull the position and velocity vectors of the Earth with respect to the Sun. The step value of 5 days is used to specify that we want to pull the position and velocity vectors at 5 day intervals within the specified date range.   
+    epochs = {
+        "start": start_string,
+        "stop": end_string,
+        "step": "5d",
+    }  # This creates a dictionary that specifies the start and stop dates for the range of dates for which we want to pull the position and velocity vectors of the Earth with respect to the Sun. The step value of 5 days is used to specify that we want to pull the position and velocity vectors at 5 day intervals within the specified date range.
     obj = Horizons(
         id="399", location="500@10", epochs=epochs
     )  # This is the astropy library function that pulls the position and velocity vectors of the Earth with respect to the Sun at the inputted date. The id='399' is the ID for Earth in the JPL Horizons system, and the location='500@10' specifies that we want the position and velocity vectors of Earth with respect to the Sun. The epochs=jd_date specifies the date for which we want the position and velocity vectors.
@@ -1206,9 +1105,11 @@ def Lambert_TOF_Sweep_Solver(
             cos_ratio = np.dot(r_Earth, r_NEO) / (r_Earth_norm * r_NEO_norm)
             cross_product_r = np.cross(r_Earth, r_NEO)
 
+            # These functions calculate the transfer angle for the orbits.
             prograde_delta_theta = prograde(cos_ratio, cross_product_r)
             retrograde_delta_theta = retrograde(cos_ratio, cross_product_r)
 
+            # A is Lambert's Geometric parameter which is a geometric constant which forms a triangle with the Sun, the Earth, and the NEO.
             A_Prograde = math.sin(prograde_delta_theta) * math.sqrt(
                 (r_Earth_norm * r_NEO_norm) / (1 - math.cos(prograde_delta_theta))
             )
@@ -1402,37 +1303,37 @@ def NEO_Feasibility_Analysis_Plot(
         name = None
         data = None
         for key, value in results.items():
-            if (
-                value["TOF"] == hover_x
-                and value["Delta V"] == hover_y
-            ):
+            if value["TOF"] == hover_x and value["Delta V"] == hover_y:
                 name = key
                 data = value
                 break
 
         if data:
             sel.annotation.set_text(
-            f"{name}\nCategory: {data['Category']}\nDelta V: {data['Delta V']:.2f} km/s\nTOF: {data['TOF']} days\nDiameter: {data['Diameter']:.2f} m"
-        )
+                f"{name}\nCategory: {data['Category']}\nDelta V: {data['Delta V']:.2f} km/s\nTOF: {data['TOF']} days\nDiameter: {data['Diameter']:.2f} m"
+            )
 
     click_cursor = mplcursors.cursor(ax.collections, hover=False)
+
     @click_cursor.connect("add")
     def on_click(sel):
         click_x, click_y = sel.target
         name = None
 
         for key, value in results.items():
-            if (
-                value["TOF"] == click_x
-                and value["Delta V"] == click_y
-            ):
+            if value["TOF"] == click_x and value["Delta V"] == click_y:
                 name = key
                 break
 
         if name:
             Launch_Data = Porkchop_Sweep(NEO_Data, name)
             Porkchop_Solutions = Porkchop_Solver(Launch_Data)
-            Porkchop_Plot(name, Porkchop_Solutions, Shoemaker_Helin_Result, Hohmann_Transfer_Result)  # Calls the porkchop plot function to generate a porkchop plot for the selected NEO.
+            Porkchop_Plot(
+                name,
+                Porkchop_Solutions,
+                Shoemaker_Helin_Result,
+                Hohmann_Transfer_Result,
+            )  # Calls the porkchop plot function to generate a porkchop plot for the selected NEO.
 
     plt.tight_layout()
     plt.savefig("neo_feasibility_plot.png", dpi=300)
@@ -1508,7 +1409,8 @@ def Size_Tier(
 
 
 def Porkchop_Sweep(
-    NEO_Data, name,
+    NEO_Data,
+    name,
 ):  # This function is similar to the Lambert_TOF_Sweep_Preparation function, but is designed to gather the necessary data for solving the Lambert problem for a range of launch dates and time of flight values. The function calculates the position and velocity vectors of the Earth and the NEO for each launch date and time of flight value, and stores the results in a dictionary for each NEO. The resulting data can be used to generate a porkchop plot, which shows the delta-v required for a transfer orbit from Earth to the NEO as a function of launch date and time of flight. Uses the same youtuber video as the Lambert_TOF_Sweep_Preparation function to explain the equations used to convert the 6 orbital elements to position and velocity vectors.
     index = NEO_Data["Name:"].index(name)
     epoch_osculation = NEO_Data["Epoch_Osculation_List"][index]
@@ -1528,6 +1430,11 @@ def Porkchop_Sweep(
 
     Launch_Dates = Porkchop_Date_Sweep_Preparation(NEO_Data, name)
     Earth_Vectors = Earth_Data_Range(Launch_Dates)
+
+    Designation = NEO_Data["Designation_List"][index]
+    First_Arrival = Launch_Dates[0] + timedelta(days=TOF_Test_Range[0])
+    Last_Arrival = Launch_Dates[-1] + timedelta(days=TOF_Test_Range[-1])
+    Horizons_NEO = NEO_Horizons_Vectors(Designation, First_Arrival, Last_Arrival)
 
     AU_to_Km = 149597870.7
 
@@ -1600,7 +1507,9 @@ def Porkchop_Sweep(
 
             r_NEO_km = r_NEO_inertial * AU_to_Km
             v_NEO_km = v_NEO_inertial * AU_to_Km
-
+            if Horizons_NEO is not None:
+                Arrival_Key = (Launch_Date + timedelta(days=TOF)).strftime("%Y-%m-%d")
+                r_NEO_km, v_NEO_km = Horizons_NEO[Arrival_Key]
             Porkchop_Variables[Launch_Date_String][TOF] = {
                 "r_Earth": r_Earth_km,
                 "v_Earth": v_Earth_km,
@@ -1610,8 +1519,9 @@ def Porkchop_Sweep(
 
     return Porkchop_Variables
 
+
 def Porkchop_Solver(
-    Lambert_Variables
+    Lambert_Variables,
 ):  # Similar to the Lambert_TOF_Sweep_Solver function, this function solves the Lambert problem for each NEO using the variables found in the Porkchop_Sweep function. The Lambert problem is a classical problem in orbital mechanics that involves finding the orbit that connects two points in space in a given time. The solution to the Lambert problem provides the initial and final velocities required to transfer from one point to another in a specified time, which is essential for planning interplanetary missions. The equations are cited from Section 5.3 of https://www.hlevkin.com/hlevkin/90MathPhysBioBooks/Mechanics/Curtis_OrbitamMechForEngineeringStudents.pdf
     mu = 1.32712440018e11  # Gravitational parameter of the Sun in km^3/s^2, which is used in the Lambert problem solution to calculate the time of flight for the transfer orbit.
     Porkchop_Results = {}
@@ -1682,21 +1592,37 @@ def Porkchop_Solver(
             except OverflowError:
                 Total_Delta_v_Retrograde = None
 
-            Porkchop_Results[launch_date][Time_of_Flight_days] = {"Total_Delta_V_Prograde": Total_Delta_v_Prograde, "Total_Delta_V_Retrograde": Total_Delta_v_Retrograde}
+            Porkchop_Results[launch_date][Time_of_Flight_days] = {
+                "Total_Delta_V_Prograde": Total_Delta_v_Prograde,
+                "Total_Delta_V_Retrograde": Total_Delta_v_Retrograde,
+            }
     return Porkchop_Results
 
-def Porkchop_Plot(name, results, Shoemaker_Helin_Result, Hohmann_Transfer_Result): # This function generates a porkchop plot for the selected NEO, which shows the optimal delta v windows for plus or minus a year from the close approach date.
+
+def Porkchop_Plot(
+    name, results, Shoemaker_Helin_Result, Hohmann_Transfer_Result
+):  # This function generates a porkchop plot for the selected NEO, which shows the optimal delta v windows for plus or minus a year from the close approach date.
     launch_dates = list(results.keys())
     launch_dates = [datetime.strptime(date, "%Y-%m-%d") for date in launch_dates]
 
-    tof_values = sorted(next(iter(results.values())).keys()) # TOF range is the same for all launch dates, so we can take it from the first launch date's results
+    tof_values = sorted(
+        next(iter(results.values())).keys()
+    )  # TOF range is the same for all launch dates, so we can take it from the first launch date's results
 
-    z = np.full((len(tof_values), len(launch_dates)), np.nan) # Buiilds the array for the delta v values.
+    z = np.full(
+        (len(tof_values), len(launch_dates)), np.nan
+    )  # Buiilds the array for the delta v values.
 
-    for column, date in enumerate(launch_dates): # Loops through each launchd date and filters the lowest delta v value for each time of flight value, and stores it in the z array for plotting.
+    for column, date in enumerate(
+        launch_dates
+    ):  # Loops through each launchd date and filters the lowest delta v value for each time of flight value, and stores it in the z array for plotting.
         for row, tof in enumerate(tof_values):
-            delta_v_prograde = results[date.strftime("%Y-%m-%d")][tof]["Total_Delta_V_Prograde"]
-            delta_v_retrograde = results[date.strftime("%Y-%m-%d")][tof]["Total_Delta_V_Retrograde"]
+            delta_v_prograde = results[date.strftime("%Y-%m-%d")][tof][
+                "Total_Delta_V_Prograde"
+            ]
+            delta_v_retrograde = results[date.strftime("%Y-%m-%d")][tof][
+                "Total_Delta_V_Retrograde"
+            ]
 
             if delta_v_prograde is not None and delta_v_retrograde is not None:
                 z[row, column] = min(delta_v_prograde, delta_v_retrograde)
@@ -1705,31 +1631,64 @@ def Porkchop_Plot(name, results, Shoemaker_Helin_Result, Hohmann_Transfer_Result
             elif delta_v_retrograde is not None:
                 z[row, column] = delta_v_retrograde
 
-    z_masked = np.ma.masked_invalid(z) # Masks the invalid values in the z array for plotting.
+    z_masked = np.ma.masked_invalid(
+        z
+    )  # Masks the invalid values in the z array for plotting.
 
-    x_number = mdates.date2num(launch_dates) # Converts the launch dates to matplotlib date numbers for plotting.
-    x, y = np.meshgrid(x_number, tof_values) # Creates a meshgrid for the x and y values for plotting.
+    x_number = mdates.date2num(
+        launch_dates
+    )  # Converts the launch dates to matplotlib date numbers for plotting.
+    x, y = np.meshgrid(
+        x_number, tof_values
+    )  # Creates a meshgrid for the x and y values for plotting.
 
-    fig, (ax, table_ax) = plt.subplots(2, 1, figsize=(12, 8), gridspec_kw={'height_ratios': [4, 1.5]})
+    fig, (ax, table_ax) = plt.subplots(
+        2, 1, figsize=(12, 8), gridspec_kw={"height_ratios": [4, 1.5]}
+    )
 
-    v_min = np.nanmin(z_masked) # Finds the minimum delta v value for the color scale.
-    v_max = min(np.nanmax(z_masked), 20.0) # Finds the maximum delta v value for the color scale, but limits it to 20 km/s to avoid extreme values skewing the color scale.
-    levels = np.linspace(v_min, v_max, 50) # Creates a range of levels for the color scale.
+    v_min = np.nanmin(z_masked)  # Finds the minimum delta v value for the color scale.
+    v_max = min(
+        np.nanmax(z_masked), 20.0
+    )  # Finds the maximum delta v value for the color scale, but limits it to 20 km/s to avoid extreme values skewing the color scale.
+    levels = np.linspace(
+        v_min, v_max, 50
+    )  # Creates a range of levels for the color scale.
 
-    filled = ax.contourf(x, y, z_masked, levels=levels, cmap='jet', extend='max') # Creates the colored regiions for the porkchop plot based on the delta v values.
-    lines = ax.contour(x, y, z_masked, levels=levels[::5], colors='black', linewidths=0.5) # Creates the contour lines for the porkchop plot based on the delta v values.
-    ax.clabel(lines, inline=True, fontsize=8, fmt='%1.1f') # Labels the contour lines with the delta v values.
+    filled = ax.contourf(
+        x, y, z_masked, levels=levels, cmap="jet", extend="max"
+    )  # Creates the colored regiions for the porkchop plot based on the delta v values.
+    lines = ax.contour(
+        x, y, z_masked, levels=levels[::5], colors="black", linewidths=0.5
+    )  # Creates the contour lines for the porkchop plot based on the delta v values.
+    ax.clabel(
+        lines, inline=True, fontsize=8, fmt="%1.1f"
+    )  # Labels the contour lines with the delta v values.
 
-    min_index = np.unravel_index(np.nanargmin(z_masked), z_masked.shape) # Finds the index of the minimum delta v value in the z array.
-    ax.plot(x[min_index], y[min_index], marker='*', color='white', markersize=18, markeredgecolor='black', zorder=5, label='Minimum Δv') # Plots a red dot at the minimum delta v value on the porkchop plot.
+    min_index = np.unravel_index(
+        np.nanargmin(z_masked), z_masked.shape
+    )  # Finds the index of the minimum delta v value in the z array.
+    ax.plot(
+        x[min_index],
+        y[min_index],
+        marker="*",
+        color="white",
+        markersize=18,
+        markeredgecolor="black",
+        zorder=5,
+        label="Minimum Δv",
+    )  # Plots a red dot at the minimum delta v value on the porkchop plot.
 
-    cbar = fig.colorbar(filled, ax=ax) # Adds a color bar to the porkchop plot to indicate the delta v values.
-    cbar.set_label('Δv (km/s)')
+    cbar = fig.colorbar(
+        filled, ax=ax
+    )  # Adds a color bar to the porkchop plot to indicate the delta v values.
+    cbar.set_label("Δv (km/s)")
 
-    ax.set_xlabel('Launch Date')
-    ax.set_ylabel('Time of Flight (days)')
-    ax.set_title(f'Porkchop Plot for {name}')
-    ax.xaxis.set_major_formatter(mdates.DateFormatter('%Y-%m-%d')) # Formats the x-axis to show the launch dates in a readable format.
+    ax.set_xlabel("Launch Date")
+    ax.set_ylabel("Time of Flight (days)")
+    ax.set_title(f"Porkchop Plot for {name}")
+    ax.xaxis.set_major_formatter(
+        mdates.DateFormatter("%Y-%m-%d")
+    )  # Formats the x-axis to show the launch dates in a readable format.
     plt.xticks(rotation=45)
     ax.legend()
 
@@ -1740,23 +1699,39 @@ def Porkchop_Plot(name, results, Shoemaker_Helin_Result, Hohmann_Transfer_Result
     Hohmann_TOF = Hohmann_Transfer_Result[name]["Time of Flight (days)"]
 
     table_data = [
+        ["Minimum Δv from Porkchop Plot", f"{z_masked[min_index]:.2f} km/s"],
+        [
+            "Launch Date of Minimum Δv",
+            f"{mdates.num2date(x[min_index]).strftime('%Y-%m-%d')}",
+        ],
+        [
+            "Arrival Date of Minimum Δv",
+            f"{(mdates.num2date(x[min_index]) + timedelta(days=int(y[min_index]))).strftime('%Y-%m-%d')}",
+        ],
+        ["Time of Flight of Minimum Δv", f"{y[min_index]} days"],
         ["NEO", name],
         ["Shoemaker-Helin Δv", f"{SH_Delta_V:.2f} km/s"],
         ["Asteroid Type", SH_Type],
         ["Hohmann Transfer Δv", f"{Hohmann_Delta_V:.2f} km/s"],
-        ["Time of Flight", f"{Hohmann_TOF} days"],
-        ["Minimum Δv from Porkchop Plot", f"{z_masked[min_index]:.2f} km/s"]
+        ["Hohmann Estimated Time of Flight", f"{Hohmann_TOF:.1f} days"],
     ]
 
     column_labels = ["Parameter", "Value"]
-    table_ax.axis('off') # Hides the axes for the table.
-    table = table_ax.table(cellText=table_data, colLabels=column_labels, cellLoc='center', loc='center', colWidths=[0.3, 0.7])
+    table_ax.axis("off")  # Hides the axes for the table.
+    table = table_ax.table(
+        cellText=table_data,
+        colLabels=column_labels,
+        cellLoc="center",
+        loc="center",
+        colWidths=[0.3, 0.7],
+    )
     table.auto_set_font_size(False)
     table.set_fontsize(9)
     table.scale(1, 1.5)
 
-
     plt.tight_layout()
-    plt.show() # Displays the porkchop plot.
+    plt.show()  # Displays the porkchop plot.
 
-asyncio.run(main())
+    
+if __name__ == "__main__":
+    asyncio.run(main())
