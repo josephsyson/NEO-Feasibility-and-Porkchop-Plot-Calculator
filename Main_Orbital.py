@@ -290,7 +290,7 @@ async def Individual_NEO_Data(
 
 
 def Shoemaker_Helin(NEO_Data):
-    # This function will group the NEOs based on their orbital characteristics, such as their semi-major axis, eccentricity, and inclination. The NEOs can be grouped into different categories, such as Apollo, Amor, and Aten asteroids, which are based on their orbital characteristics. Using such classifications, the Shoemaker-Helin method is used to calculate the round trip Delta V in Km/s. The source used to classify such NEOS is: https://cneos.jpl.nasa.gov/about/neo_groups.html
+    # This function will group the NEOs based on their orbital characteristics, such as their semi-major axis, eccentricity, and inclination. The NEOs can be grouped into different categories, such as Apollo, Amor, and Aten asteroids, which are based on their orbital characteristics. Using such classifications, the Shoemaker-Helin method is used to calculate the one-way Delta V in Km/s. The source used to classify such NEOS is: https://cneos.jpl.nasa.gov/about/neo_groups.html
 
     results = {}
 
@@ -1287,7 +1287,7 @@ def NEO_Feasibility_Analysis_Plot(
 
     ax.set_xlabel("Optimized Time of Flight (days)")
     ax.set_ylabel("Optimized Lambert Solver Delta V (km/s)")
-    ax.set_title("NEO Mission Feasibility on Close Approach (NHATS Compliant)")
+    ax.set_title("NEO Mission Feasibility on Close Approach (NHATS Inspired)")
     ax.grid(True, linestyle="--", alpha=0.5)
 
     legend = ax.legend(title="Feasibility Tier", loc="upper right")

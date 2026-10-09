@@ -88,7 +88,7 @@ def elements(m0=M0):
 
 
 def propagate(r0, v0, tof_s, mu):
-    """Independent two-body propagation (same helper as in the Lambert tests)."""
+    # Use a simple two-body propagator to fly the state forward in time. This is used by the offline tests to check that the NEO_State_Vector function is internally consistent.
 
     def rhs(t, s):
         r = s[:3]
@@ -98,9 +98,6 @@ def propagate(r0, v0, tof_s, mu):
     return sol.y[:3, -1]
 
 
-# ---------------------------------------------------------------------------
-# OFFLINE TESTS: these check that the conversion is internally consistent.
-# ---------------------------------------------------------------------------
 def test_matches_two_body_propagation():  # Gets the state at the epoch, flies it forward 150 days with the independent propagator, and compares with the function's state 150 days after the epoch. Catches velocity, unit, and mean motion errors.
     r0, v0 = NEO_State_Vector(*elements(), EPOCH_JD)
     r1, _ = NEO_State_Vector(*elements(), EPOCH_JD + 150.0)
@@ -147,13 +144,10 @@ def test_perihelion_direction():  # At mean anomaly 0 the NEO is at perihelion, 
     assert err < 1e-6
 
 
-# ---------------------------------------------------------------------------
-# HORIZONS COMPARISON: compares against JPL's real ephemeris for a real NEO.
-# This does not use assert, because the error is EXPECTED to grow away from the epoch.
-# ---------------------------------------------------------------------------
+
 def horizons_comparison(
     neo_id, api_key, offsets_days=(0, 30, 90, 180, 365), extra_dates=()
-):
+): # compares the two-body orbital elements method with the JPL Horizons ephemeris for a given NEO. The offsets_days are days from the osculating epoch of the orbital elements, and extra_dates are specific calendar dates to check. Prints a table of position and velocity errors.
     import requests
     from datetime import datetime
     import julian
