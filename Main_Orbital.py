@@ -1396,7 +1396,7 @@ def Size_Tier(
 
     if (
         200 < NEO_Diameter
-    ):  # Greater than 200 meters in diameter, a highly feasible target for a manned mission where the spacecraft can land and return safely based on the slow rotation of the NEO as well as the higher likelihood of a greater payout. This is based on the research done by Ralf C. Boden in "Target selection and mass estimation for manned NEO exploration using a baseline mission design" (2019) https://www.sciencedirect.com/science/article/pii/S0094576515000715 which states that NEOs greater than 200 meters in diameter are the most feasible targets for a manned mission.
+    ):  # Greater than 200 meters in diameter, a highly feasible target for a manned mission where the spacecraft can land and return safely based on the slow rotation of the NEO as well as the higher likelihood of a greater payout. This is based on the research done by Ralf C. Boden in "Target selection and mass estimation for manned NEO exploration using a baseline mission design" (2015) https://www.sciencedirect.com/science/article/pii/S0094576515000715 which states that NEOs greater than 200 meters in diameter are the most feasible targets for a manned mission.
         return 0
 
     if (

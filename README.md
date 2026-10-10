@@ -112,50 +112,36 @@ For Apophis, the two-body state printed 0.0 km at 0.1 km precision when compared
 
 ## Citations
 
-Barbee, B. W., Esposito, T., & Hur-Diaz, S. (2013). The Near-Earth Object Human Space Flight 
-    Accessible Targets Study (NHATS): An ongoing effort to identify near-Earth asteroid 
-    destinations for human explorers. In *Proceedings of the 2013 IAA Planetary Defense Conference* 
-    (IAA-PDC13-04-13). International Academy of Astronautics.
+Anthropic. (2026). *Claude* [Large language model]. https://claude.ai
 
-Bate, R. R., Mueller, D. D., White, J. E., & Saylor, W. W. (1971). *Fundamentals of Astrodynamics*. 
-    Dover Publications. (Reference Video: "Converting Orbital Elements to Position and Velocity Vectors",
-    https://www.youtube.com/watch?v=zi0FGTGnbB4).
+Barbee, B. W., Abell, P. A., Adamo, D. R., Alberding, C. M., Mazanek, D. D., Johnson, L. N., Yeomans, D. K., Chodas, P. W., Chamberlin, A. B., & Friedensen, V. P. (2013, April 16). *The Near-Earth Object Human Space Flight Accessible Targets Study: An ongoing effort to identify near-Earth asteroid destinations for human explorers* (IAA-PDC13-04-13) [Conference presentation]. 2013 IAA Planetary Defense Conference. International Academy of Astronautics. https://iaaspace.org/wp-content/uploads/iaa/Scientific%20Activity/conf/pdc2013/IAA-PDC13-04-13pr.pdf
 
-Boden, R. C. (2019). Target selection and mass estimation for manned NEO exploration using a 
-    baseline mission design. *Acta Astronautica*, 115, 71–85. 
-    https://doi.org/10.1016/j.actaastro.2015.05.012
+Boden, R. C., Hein, A. M., & Kawaguchi, J. (2015). Target selection and mass estimation for manned NEO exploration using a baseline mission design. *Acta Astronautica*, 111, 198–221. https://doi.org/10.1016/j.actaastro.2015.02.018
 
-Curtis, H. D. (2005). *Orbital Mechanics for Engineering Students* (1st ed.). Elsevier / Butterworth-Heinemann. 
-    [Chapters 2, 3, 5, & 6: Two-Body Mechanics, Kepler's Equation, Universal Variables, 
-     Lambert's Problem, and Hohmann Transfers].
+Curtis, H. D. (2005). *Orbital Mechanics for Engineering Students* (1st ed.). Elsevier / Butterworth-Heinemann. [Chapters 2, 3, 5, & 6: Two-Body Mechanics, Kepler's Equation, Universal Variables, Lambert's Problem, and Hohmann Transfers].
 
-Elvis, M., Blanco, P., Cenko, S. B., et al. (2011). Ultra-low delta-v objects and the human 
-    exploration of asteroids. *Planetary and Space Science*, 59(13), 1408–1412. 
-    https://doi.org/10.1016/j.pss.2011.05.010
+Elvis, M., McDowell, J., Hoffman, J. A., & Binzel, R. P. (2011). Ultra-low delta-v objects and the human exploration of asteroids. *Planetary and Space Science*, 59(13), 1408–1412. https://doi.org/10.1016/j.pss.2011.05.006
 
-Giorgini, J. D., Yeomans, D. K., Chamberlin, A. B., Chodas, P. W., Jacobson, R. A., Keesey, M. S., 
-    Lieske, J. H., Ostro, S. J., Standish, E. M., & Wimberly, R. N. (1996). JPL's On-Line Solar System 
-    Data Service. *Bulletin of the American Astronomical Society*, 28, 1158.
+Ginsburg, A., Sipőcz, B. M., Brasseur, C. E., et al. (2019). astroquery: An Astronomical Web-Querying Package in Python. *The Astronomical Journal*, 157(3), 98.
 
-Ginsburg, A., Sipőcz, B. M., Brasseur, C. E., et al. (2019). astroquery: An Astronomical Web-Querying 
-    Package in Python. *The Astronomical Journal*, 157(3), 98.
+Giorgini, J. D., Yeomans, D. K., Chamberlin, A. B., Chodas, P. W., Jacobson, R. A., Keesey, M. S., Lieske, J. H., Ostro, S. J., Standish, E. M., & Wimberly, R. N. (1996). JPL's On-Line Solar System Data Service. *Bulletin of the American Astronomical Society*, 28, 1158.
 
-Harris, C. R., Millman, K. J., van der Walt, S. J., et al. (2020). Array programming with NumPy. 
-    *Nature*, 585, 357–362.
+Harris, C. R., Millman, K. J., van der Walt, S. J., et al. (2020). Array programming with NumPy. *Nature*, 585, 357–362.
 
 Hunter, J. D. (2007). Matplotlib: A 2D graphics environment. *Computing in Science & Engineering*, 9(3), 90–95.
 
-NASA Center for Near-Earth Object Studies. (n.d.). *Near-Earth Object Human Space Flight Accessible 
-    Targets Study (NHATS) Guidelines & Caveats*. JPL / NASA. https://cneos.jpl.nasa.gov/nhats/caveats.html
+NASA Center for Near-Earth Object Studies. (n.d.). *Near-Earth Object Human Space Flight Accessible Targets Study (NHATS) Guidelines & Caveats*. JPL / NASA. https://cneos.jpl.nasa.gov/nhats/caveats.html
 
-NASA Center for Near-Earth Object Studies. (n.d.). *Near Earth Object Groups*. JPL / NASA. 
-    https://cneos.jpl.nasa.gov/about/neo_groups.html
+NASA Center for Near-Earth Object Studies. (n.d.). *Near Earth Object Groups*. JPL / NASA. https://cneos.jpl.nasa.gov/about/neo_groups.html
 
-NASA Center for Near-Earth Object Studies. (n.d.). *NeoWs (Near Earth Object Web Service) REST API*. 
-    https://api.nasa.gov/
+NASA Center for Near-Earth Object Studies. (n.d.). *NeoWs (Near Earth Object Web Service) REST API*. https://api.nasa.gov/
 
-Press, W. H., Teukolsky, S. A., Vetterling, W. T., & Flannery, B. P. (2007). *Numerical Recipes: 
-    The Art of Scientific Computing* (3rd ed.). Cambridge University Press. [Newton-Raphson Method].
+Shoemaker, E. M., & Helin, E. F. (1978). Earth-approaching asteroids as targets for exploration. In *Asteroids: An Exploration Assessment* (NASA-CP-2053), pp. 245–256. NASA.
 
-Shoemaker, E. M., & Helin, E. F. (1978). Earth-approaching asteroids as targets for exploration. 
-    In *Asteroids: An Exploration Assessment* (NASA-CP-2053), pp. 245–256. NASA.
+Spacecraft Robotics Lab. (2020, December 23). *Orbital Mechanics - Solving Kepler's Time Equation and Orbital Elements* [Video]. YouTube. https://www.youtube.com/watch?v=zi0FGTGnbB4
+
+Virtanen, P., Gommers, R., Oliphant, T. E., et al. (2020). SciPy 1.0: Fundamental algorithms for scientific computing in Python. *Nature Methods*, 17, 261–272.
+
+## AI Assistance Note
+
+I used Claude (Anthropic) as a coding reviewer and to guide my understanding of much of this content, as I have not covered it yet in my studies. It mostly helped with writing the test functions, the Horizons helper (`Horizons_NEO.py`), debugging plotting errors, and reviewing this README. The orbital mechanics implementation in `Main_Orbital.py` and the analysis are my own, and I checked the results against Curtis's textbook and JPL Horizons.
