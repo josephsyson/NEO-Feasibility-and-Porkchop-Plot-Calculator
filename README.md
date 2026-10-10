@@ -34,10 +34,6 @@ NEO Orbital data is fetched concurrently via asyncio/aiohttp rather than sequent
 
 Earth’s position and velocity vectors are pulled live from JPL’s Horizons system (via astroquery) instead of being approximated. The porkchop plot also takes selected NEO’s vectors from Horizons, so both ends of the transfer use real positions and the NEO’s orbit includes planetary gravity and close flybys. The feasibility chart instead propagates NASA’s orbital elements with two-body motion for speed. If a Horizons lookup fails, the program prints a message and falls back to the two-body method.
 
-## Example Outputs
-
-The following outputs are for the date range from 04/12/2029 to 04/14/2029. The notable NEO in this date range is 99942 Apophis which has been widely studied as a large diameter, low Δv target due to its historic April 13, 2029 close approach – one of the closest Earth encounters ever predicted in advance for an asteroid of its size. The calculator returns a minimum one-way heliocentric rendezvous transfer Δv of 4.09 km/s with a departure date of 02/07/2029 and arrival date of 05/23/2029, a 105-day flight. The Shoemaker-Helin method gives 5.19 km/s including departure from low Earth orbit while the simplified Hohmann gives 1.23 km/s leaving out Apophis’ eccentricity and inclination. The feasibility chart used the two-body method to provide a quick estimate on the close approach date while the porkchop plot uses Horizons to gather more accurate calculations. This allows for the model to account for Apophis’ flyby which will significantly change its orbit due to Earth’s gravitational pull that the two-body problem would not include in the position calculation. For that reason, the feasibility chart’s Apophis point is unreliable and should not be compared with the porkchop plot minimum.
-
 ### Feasibility Chart
 
 ![Feasibility chart](neo_feasibility_plot.png)
